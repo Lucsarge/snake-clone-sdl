@@ -1,5 +1,8 @@
 #include <stdio.h>
+
 #include <SDL3/SDL.h>
+#define SDL_MAIN_USE_CALLBACKS
+#include <SDL3/SDL_main.h>
 
 static SDL_Window* window = NULL;
 static SDL_Renderer* renderer = NULL;
@@ -58,44 +61,44 @@ void renderBoard() {
     SDL_RenderPresent(renderer);
 }
 
-int main() {
-    printf("hello snake\n");
-    head.x = 0;
-    head.y = 0;
-
-    bool done = false;
-
-    SDL_Init(SDL_INIT_VIDEO);
+#pragma region SDL Callbacks
+SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
 
     SDL_CreateWindowAndRenderer("Snake", 512, 512, NULL, &window, &renderer);
     if (window == NULL) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not create window %s\n", SDL_GetError());
-        return 1;
+        return SDL_APP_FAILURE;
     }
     if (renderer == NULL) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not create renderer %s\n", SDL_GetError());
-        return 1;
+        return SDL_APP_FAILURE;
     }
 
-    while (!done) {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_EVENT_QUIT) {
-                done = true;
-            }
+    return SDL_APP_CONTINUE;
+}
 
-            // keyboard events for input
-            if (event.type == SDL_EVENT_KEY_DOWN) {
-                manageInput(&event);
-            }
-        } // end of event polling
+SDL_AppResult SDL_AppIterate(void* appstate) {
+    renderBoard();
 
-        // Render Grid
-        renderBoard();
+    return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
+    if (event->type == SDL_EVENT_KEY_DOWN) {
+        manageInput(event);
     }
 
+    if (event->type == SDL_EVENT_KEY_UP) {
+        if (event->key.scancode == SDL_SCANCODE_ESCAPE) {
+            return SDL_APP_SUCCESS;
+        }
+    }
+
+    return SDL_APP_CONTINUE;
+}
+
+void SDL_AppQuit(void* appstate, SDL_AppResult result) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-    SDL_Quit();
-    return 0;
 }
+#pragma endregion
