@@ -1,7 +1,21 @@
 #include <stdio.h>
 #include <SDL3/SDL.h>
 
-
+void manageInput(SDL_Event *e) {
+    SDL_assert(e->type == SDL_EVENT_KEY_DOWN);
+    if (e->key.scancode == SDL_SCANCODE_W) {
+        printf("'W' key was pressed down\n");
+    }
+    else if (e->key.scancode == SDL_SCANCODE_A) {
+        printf("'A' key was pressed down\n");
+    }
+    else if (e->key.scancode == SDL_SCANCODE_S) {
+        printf("'S' key was pressed down\n");
+    }
+    else if (e->key.scancode == SDL_SCANCODE_D) {
+        printf("'D' key was pressed down\n");
+    }
+}
 
 int main() {
     printf("hello snake\n");
@@ -25,6 +39,11 @@ int main() {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 done = true;
+            }
+
+            // keyboard events for input
+            if (event.type == SDL_EVENT_KEY_DOWN) {
+                manageInput(&event);
             }
         }
     }
