@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <SDL3/SDL.h>
 
+static SDL_Window* window = NULL;
+static SDL_Renderer* renderer = NULL;
+
+#define WINDOW_HEIGHT 512
+#define WINDOW_WIDTH 512
+
 void manageInput(SDL_Event *e) {
     SDL_assert(e->type == SDL_EVENT_KEY_DOWN);
     if (e->key.scancode == SDL_SCANCODE_W) {
@@ -23,14 +29,14 @@ int main() {
     bool done = false;
 
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window *window = SDL_CreateWindow(
-        "Snake",
-        512,
-        512,
-        NULL);
 
+    SDL_CreateWindowAndRenderer("Snake", 512, 512, NULL, &window, &renderer);
     if (window == NULL) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not create window %s\n", SDL_GetError());
+        return 1;
+    }
+    if (renderer == NULL) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not create renderer %s\n", SDL_GetError());
         return 1;
     }
 
@@ -48,8 +54,8 @@ int main() {
         }
     }
 
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-
     SDL_Quit();
     return 0;
 }
