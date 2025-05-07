@@ -50,3 +50,10 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# additional ignores
+.vs/
+/snake-sdl/*.vcxproj
+/snake-sdl/*.vcxproj.user
+/snake-sdl/*.vcxproj.filters
+/snake-sdl/x64/
