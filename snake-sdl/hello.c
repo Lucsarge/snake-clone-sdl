@@ -7,8 +7,12 @@
 static SDL_Window* window = NULL;
 static SDL_Renderer* renderer = NULL;
 
-#define WINDOW_HEIGHT 512
-#define WINDOW_WIDTH 512
+#define GAME_NAME "Snake"
+#define WINDOW_WIDTH 640
+#define WINDOW_HEIGHT 480
+
+const int tileSize = 40; // number of pixels each tile the board is wide
+int tileMargin = 3; // empty space around each tile when draw to help distinguish tiles
 
 struct SnakePart {
     int x; // x coordinate of the snake head
@@ -16,6 +20,7 @@ struct SnakePart {
 };
 
 struct SnakePart head;
+
 
 void manageInput(SDL_Event *e) {
     int vInput = 0;
@@ -40,31 +45,35 @@ void manageInput(SDL_Event *e) {
     }
 
     if (vInput != 0) {
-        head.y += 50 * vInput;
+        head.y += 40 * vInput;
     }
     else if (hInput != 0) {
-        head.x += 50 * hInput;
+        head.x += 40 * hInput;
     }
 }
 
 void renderBoard() {
     // clear the board
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE); // the next SDL_RenderClear call uses the current render draw color so set it to black here
     SDL_RenderClear(renderer);
 
+    // set color to green for drawing the snake
     SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
 
-    SDL_FRect rect = { head.x+1, head.y+1, 49, 49 };
+    int tileRenderSize = tileSize - (tileMargin * 2);
+    SDL_FRect rect = { head.x + tileMargin, head.y + tileMargin, tileRenderSize, tileRenderSize };
 
     SDL_RenderFillRect(renderer, &rect);
+
+    // set color to red for drawing the apple
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
 
     SDL_RenderPresent(renderer);
 }
 
 #pragma region SDL Callbacks
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
-
-    SDL_CreateWindowAndRenderer("Snake", 512, 512, NULL, &window, &renderer);
+    SDL_CreateWindowAndRenderer(GAME_NAME, WINDOW_WIDTH, WINDOW_HEIGHT, NULL, &window, &renderer);
     if (window == NULL) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not create window %s\n", SDL_GetError());
         return SDL_APP_FAILURE;
