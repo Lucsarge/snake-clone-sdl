@@ -21,7 +21,7 @@ void manageInput(SDL_Event *e) {
     int vInput = 0;
     int hInput = 0;
 
-    SDL_assert(e->type == SDL_EVENT_KEY_DOWN);
+    SDL_assert(e->type == SDL_EVENT_KEY_DOWN); // this assert was made in an example for the basic input handling, might not be necessary to keep
     if (e->key.scancode == SDL_SCANCODE_W) {
         printf("'W' key was pressed down\n");
         vInput -= 1;
@@ -90,8 +90,13 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
 
     if (event->type == SDL_EVENT_KEY_UP) {
         if (event->key.scancode == SDL_SCANCODE_ESCAPE) {
-            return SDL_APP_SUCCESS;
+            return SDL_APP_SUCCESS; // quit when releasing the escape key
         }
+    }
+
+    // handle closing the window
+    if (event->type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) {
+        return SDL_APP_SUCCESS;
     }
 
     return SDL_APP_CONTINUE;
