@@ -20,8 +20,10 @@ struct Tile {
     int y;
 };
 
-struct Tile body[192] = { NULL }; // (Width / TileSize) * (Height / TileSize), max number of tiles on the board should mean the max number of snake body parts total
+struct Tile body[191] = { NULL }; // (Width / TileSize) * (Height / TileSize), max number of tiles on the board should mean the max number of snake body parts total
 int bodyCount;
+
+struct Tile apple;
 
 enum Direction {
     NONE = 0,
@@ -33,8 +35,36 @@ enum Direction {
 
 enum Direction currDir = EAST;
 
+const char* tileStateNames[] = { "Empty", "Snake", "Apple" }; // right now only for debug output purposes
+enum TileState {
+    EMPTY = 0,
+    SNAKE,
+    APPLE,
+};
+
+enum TileState boardTiles[191] = { EMPTY };
+
 // timing variables
 unsigned int lastTime = 0, currentTime;
+
+// n = number of actual elements declared in the original array
+void insert(struct Tile arr[], int* n, int pos, struct Tile val) {
+
+    // Shift elements to the right
+    for (int i = *n; i > pos; i--)
+        arr[i] = arr[i - 1];
+
+    // Insert val at the specified position
+    arr[pos] = val;
+
+    // Increase the current size
+    (*n)++;
+}
+
+void setTile(int xCoord, int yCoord, enum TileState newState) {
+    boardTiles[yCoord * 16 + xCoord] = newState;
+    printf("Set tile %d, %d to %s\n", xCoord, yCoord, tileStateNames[newState]);
+}
 
 void manageInput(SDL_Event *e) {
     int vInput = 0;
@@ -70,41 +100,77 @@ void renderBoard() {
 
     int tileRenderSize = tileSize - (tileMargin * 2);
 
-    SDL_FRect bodyTile = { 0, 0, tileRenderSize, tileRenderSize };
-
-    bodyTile.x += tileSize * 2 + tileMargin;
-    bodyTile.y += tileSize * 2 + tileMargin;
+    SDL_FRect tile = { 0, 0, tileRenderSize, tileRenderSize };
 
     for (int i = 0; i < bodyCount; i++) {
-        bodyTile.x = body[i].x + tileMargin;
-        bodyTile.y = body[i].y + tileMargin;
-        SDL_RenderFillRect(renderer, &bodyTile);
+        tile.x = body[i].x * tileSize + tileMargin;
+        tile.y = body[i].y * tileSize + tileMargin;
+        SDL_RenderFillRect(renderer, &tile);
     }
 
     // set color to red for drawing the apple
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
+    tile.x = apple.x * tileSize + tileMargin;
+    tile.y = apple.y * tileSize + tileMargin;
+    SDL_RenderFillRect(renderer, &tile);
 
     SDL_RenderPresent(renderer);
 }
 
 void addBodyPart() {
-    // add a body part and increment the bodyCount by 1
+    struct Tile newHead = { apple.x, apple.y };
 
-    bodyCount++;
+    // When eating an apple and increasing the length of the snake we just insert the new head at the apples position
+    // and shift every body part down one index in the array
+    // bodyCount is incrememnted by one inside the insert function
+    insert(body, &bodyCount, 0, newHead);
+    setTile(body[0].x, body[0].y, SNAKE);
+}
+
+void placeApple() {
+    int row = rand() % (11);
+    int col = rand() % (15);
+
+    apple.x = col;
+    apple.y = row;
+    setTile(apple.x, apple.y, APPLE);
 }
 
 void moveSnake() {
+    // Calculate what the next position that the head should be in
+    int nextX = body[0].x;
+    int nextY = body[0].y;
     if (currDir == NORTH) {
-        body[0].y -= tileSize;
+        nextY--;
     }
     else if (currDir == EAST) {
-        body[0].x += tileSize;
+        nextX++;
     }
     else if (currDir == SOUTH) {
-        body[0].y += tileSize;
+        nextY++;
     }
     else if (currDir == WEST) {
-        body[0].x -= tileSize;
+        nextX--;
+    }
+
+    // Check if the next head position is overlapping with the current apples position
+    int bodyIndex = nextY * 16 + nextX;
+    if (boardTiles[bodyIndex] == APPLE) {
+        printf("Snake head is overlapping with apple\n");
+        addBodyPart();
+        printf("Body Count: %d\n", bodyCount);
+        placeApple();
+    }
+    else {
+        // starting from tail to head - 1
+        for (int i = bodyCount - 1; i > 0; i--) {
+            body[i] = body[i - 1];
+        }
+
+        // update the snake head
+        body[0].x = nextX;
+        body[0].y = nextY;
+        setTile(body[0].x, body[0].y, SNAKE);
     }
 }
 
@@ -120,7 +186,14 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
         return SDL_APP_FAILURE;
     }
 
+    srand(time(NULL)); // re-seed the random number generation
+
     bodyCount = 1; // start at 1 since the game with always begin with the snakes head, or body[0]
+    body[0].x = 0;
+    body[0].y = 0;
+    setTile(body[0].x, body[0].y, SNAKE);
+
+    placeApple();
 
     renderBoard(); // call once here when the game starts other wise the board won't render until after the first second
 
@@ -129,10 +202,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
 
 SDL_AppResult SDL_AppIterate(void* appstate) {
     currentTime = SDL_GetTicks();
-    if (currentTime > lastTime + 1000) {
+    if (currentTime > lastTime + 375) {
         moveSnake();
         renderBoard();
-        printf("Tick %s\n", time);
         lastTime = currentTime;
     }
 
