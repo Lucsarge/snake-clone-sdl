@@ -79,19 +79,19 @@ void manageInput(SDL_Event *e) {
     int hInput = 0;
 
     SDL_assert(e->type == SDL_EVENT_KEY_DOWN); // this assert was made in an example for the basic input handling, might not be necessary to keep
-    if (e->key.scancode == SDL_SCANCODE_W) {
+    if (e->key.scancode == SDL_SCANCODE_W && currDir != SOUTH) {
         printf("'W' key was pressed down\n");
         currDir = NORTH;
     }
-    else if (e->key.scancode == SDL_SCANCODE_A) {
+    else if (e->key.scancode == SDL_SCANCODE_A && currDir != EAST) {
         printf("'A' key was pressed down\n");
         currDir = WEST;
     }
-    else if (e->key.scancode == SDL_SCANCODE_S) {
+    else if (e->key.scancode == SDL_SCANCODE_S && currDir != NORTH) {
         printf("'S' key was pressed down\n");
         currDir = SOUTH;
     }
-    else if (e->key.scancode == SDL_SCANCODE_D) {
+    else if (e->key.scancode == SDL_SCANCODE_D && currDir != WEST) {
         printf("'D' key was pressed down\n");
         currDir = EAST;
     }
