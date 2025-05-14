@@ -61,8 +61,16 @@ void insert(struct Tile arr[], int* n, int pos, struct Tile val) {
     (*n)++;
 }
 
+int getTileIndex(int xCoord, int yCoord) {
+    return yCoord * 16 + xCoord;
+}
+
+enum TileState getTile(int xCoord, int yCoord) {
+    return boardTiles[getTileIndex(xCoord, yCoord)];
+}
+
 void setTile(int xCoord, int yCoord, enum TileState newState) {
-    boardTiles[yCoord * 16 + xCoord] = newState;
+    boardTiles[getTileIndex(xCoord, yCoord)] = newState;
     printf("Set tile %d, %d to %s\n", xCoord, yCoord, tileStateNames[newState]);
 }
 
@@ -131,9 +139,23 @@ void placeApple() {
     int row = rand() % (11);
     int col = rand() % (15);
 
-    apple.x = col;
-    apple.y = row;
-    setTile(apple.x, apple.y, APPLE);
+    int newTileIndex = getTileIndex(col, row);
+    int validIndex;
+    for (int i = 0; i < 192; i++) {
+        if (boardTiles[(i + newTileIndex) % 191] != SNAKE) {
+            // set the apple to this index
+            boardTiles[i + newTileIndex] = APPLE;
+            apple.x = col;
+            apple.y = row;
+            setTile(apple.x, apple.y, APPLE);
+            return;
+        }
+    }
+
+    // unable to find a free tile after checking all of them
+    printf("Unable to find an appropriate index for the apple to be placed");
+    SDL_Quit();
+
 }
 
 void moveSnake() {
