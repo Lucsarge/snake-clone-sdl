@@ -175,6 +175,14 @@ void moveSnake() {
         nextX--;
     }
 
+    // Check for out of bounds collision
+    if (nextX < 0 || nextX > 15 ||
+        nextY < 0 || nextY > 11) {
+        printf("The snake when out of bounds");
+        SDL_Quit();
+    }
+
+
     // Check if the next head position is overlapping with the current apples position
     int bodyIndex = nextY * 16 + nextX;
     if (boardTiles[bodyIndex] == APPLE) {
@@ -184,15 +192,29 @@ void moveSnake() {
         placeApple();
     }
     else {
+        // store the current position that the last snake part is in for later use
+        struct Tile tailEnd = body[bodyCount - 1];
+
         // starting from tail to head - 1
         for (int i = bodyCount - 1; i > 0; i--) {
             body[i] = body[i - 1];
+        }
+
+        // clear the last tile that is no longer snake
+        setTile(tailEnd.x, tailEnd.y, EMPTY);
+
+        // Check for snake body collision
+        // Must be checked after the tail end is cleared otherwise the snake would run into a body part that is about to clear the path
+        if (boardTiles[bodyIndex] == SNAKE) {
+            printf("Snake has collided with itself");
+            SDL_Quit();
         }
 
         // update the snake head
         body[0].x = nextX;
         body[0].y = nextY;
         setTile(body[0].x, body[0].y, SNAKE);
+
     }
 }
 
